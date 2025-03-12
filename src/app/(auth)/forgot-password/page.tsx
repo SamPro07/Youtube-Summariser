@@ -27,15 +27,12 @@ export default async function ForgotPassword(props: {
         <div className="w-full max-w-md rounded-lg border border-border bg-card p-6 shadow-sm">
           <form className="flex flex-col space-y-6">
             <div className="space-y-2 text-center">
-              <h1 className="text-3xl font-semibold tracking-tight">Reset Password</h1>
+              <h1 className="text-3xl font-semibold tracking-tight">
+                Reset Password
+              </h1>
               <p className="text-sm text-muted-foreground">
-                Already have an account?{" "}
-                <Link
-                  className="text-primary font-medium hover:underline transition-all"
-                  href="/sign-in"
-                >
-                  Sign in
-                </Link>
+                Enter your email address and we'll send you a link to reset your
+                password.
               </p>
             </div>
 
@@ -60,8 +57,17 @@ export default async function ForgotPassword(props: {
               pendingText="Sending reset link..."
               className="w-full"
             >
-              Reset Password
+              Send Reset Link
             </SubmitButton>
+
+            <div className="text-center mt-4">
+              <Link
+                className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                href="/sign-in"
+              >
+                Back to Sign In
+              </Link>
+            </div>
 
             <FormMessage message={searchParams} />
           </form>

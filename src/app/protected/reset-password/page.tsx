@@ -4,10 +4,10 @@ import Navbar from "@/components/navbar";
 import { SubmitButton } from "@/components/submit-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { createClient } from "../../../supabase/server";
+import { createClient } from "../../../../supabase/server";
 import { redirect } from "next/navigation";
 
-export default async function ResetPassword(props: {
+export default async function ProtectedResetPassword(props: {
   searchParams: Promise<Message>;
 }) {
   const searchParams = await props.searchParams;
