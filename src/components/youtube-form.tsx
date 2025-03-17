@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -15,7 +15,12 @@ type SummaryType = {
   mainTakeaways: string[];
 };
 
-export default function YouTubeForm() {
+interface YouTubeFormProps {
+  onFormSubmit?: (e: FormEvent) => boolean | void;
+  onUrlChange?: (value: string) => void;
+}
+
+export default function YouTubeForm({ onFormSubmit, onUrlChange }: YouTubeFormProps) {
   const [url, setUrl] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [summary, setSummary] = useState<SummaryType | null>(null);
@@ -39,7 +44,13 @@ export default function YouTubeForm() {
     getUser();
   }, []);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
+    // If external handler exists, call it
+    if (onFormSubmit) {
+      const shouldContinue = onFormSubmit(e);
+      if (shouldContinue === false) return;
+    }
+    
     e.preventDefault();
     setError("");
 
@@ -83,6 +94,16 @@ export default function YouTubeForm() {
       console.error(err);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleInputChange = (value: string) => {
+    // Original state update logic
+    setUrl(value);
+    
+    // Notify parent component if handler exists
+    if (onUrlChange) {
+      onUrlChange(value);
     }
   };
 
@@ -158,7 +179,7 @@ export default function YouTubeForm() {
                   type="text"
                   placeholder="Paste YouTube URL here"
                   value={url}
-                  onChange={(e) => setUrl(e.target.value)}
+                  onChange={(e) => handleInputChange(e.target.value)}
                   className="pl-10"
                 />
                 <Youtube className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />

@@ -5,126 +5,70 @@ export default function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="bg-gray-50 border-t border-gray-100">
-      <div className="container mx-auto px-4 py-12">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
-          {/* Product Column */}
+    <footer className="bg-gray-100 border-t">
+      <div className="container mx-auto px-4 py-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
-            <h3 className="font-semibold text-gray-900 mb-4">Product</h3>
-            <ul className="space-y-2">
-              <li>
-                <Link
-                  href="/#features"
-                  className="text-gray-600 hover:text-blue-600"
-                >
-                  Features
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/pricing"
-                  className="text-gray-600 hover:text-blue-600"
-                >
-                  Pricing
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/dashboard"
-                  className="text-gray-600 hover:text-blue-600"
-                >
-                  Dashboard
-                </Link>
-              </li>
-            </ul>
+            <h3 className="text-lg font-semibold mb-4">YT Summarizer</h3>
+            <p className="text-gray-600">
+              Save time with AI-powered YouTube video summaries.
+            </p>
           </div>
-
-          {/* Company Column */}
+          
           <div>
-            <h3 className="font-semibold text-gray-900 mb-4">Company</h3>
+            <h3 className="text-lg font-semibold mb-4">Quick Links</h3>
             <ul className="space-y-2">
               <li>
-                <Link href="#" className="text-gray-600 hover:text-blue-600">
+                <Link href="/" className="text-gray-600 hover:text-blue-600">
+                  Home
+                </Link>
+              </li>
+              <li>
+                <Link href="/about" className="text-gray-600 hover:text-blue-600">
                   About
                 </Link>
               </li>
               <li>
-                <Link href="#" className="text-gray-600 hover:text-blue-600">
-                  Blog
+                <Link href="/pricing" className="text-gray-600 hover:text-blue-600">
+                  Pricing
                 </Link>
               </li>
               <li>
-                <Link href="#" className="text-gray-600 hover:text-blue-600">
-                  Contact
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          {/* Resources Column */}
-          <div>
-            <h3 className="font-semibold text-gray-900 mb-4">Resources</h3>
-            <ul className="space-y-2">
-              <li>
-                <Link href="#" className="text-gray-600 hover:text-blue-600">
-                  Help Center
-                </Link>
-              </li>
-              <li>
-                <Link href="#" className="text-gray-600 hover:text-blue-600">
-                  Tutorials
-                </Link>
-              </li>
-              <li>
-                <Link href="#" className="text-gray-600 hover:text-blue-600">
+                <Link href="/faq" className="text-gray-600 hover:text-blue-600">
                   FAQ
                 </Link>
               </li>
             </ul>
           </div>
-
-          {/* Legal Column */}
+          
           <div>
-            <h3 className="font-semibold text-gray-900 mb-4">Legal</h3>
+            <h3 className="text-lg font-semibold mb-4">Legal</h3>
             <ul className="space-y-2">
               <li>
-                <Link href="#" className="text-gray-600 hover:text-blue-600">
-                  Privacy Policy
-                </Link>
-              </li>
-              <li>
-                <Link href="#" className="text-gray-600 hover:text-blue-600">
+                <Link href="/terms" className="text-gray-600 hover:text-blue-600">
                   Terms of Service
                 </Link>
               </li>
               <li>
-                <Link href="#" className="text-gray-600 hover:text-blue-600">
-                  Cookie Policy
+                <Link href="/privacy" className="text-gray-600 hover:text-blue-600">
+                  Privacy Policy
                 </Link>
               </li>
             </ul>
           </div>
+          
+          <div>
+            <h3 className="text-lg font-semibold mb-4">Contact</h3>
+            <ul className="space-y-2">
+              <li className="text-gray-600">
+                support@ytsummarizer.com
+              </li>
+            </ul>
+          </div>
         </div>
-
-        <div className="flex flex-col md:flex-row justify-between items-center pt-8 border-t border-gray-200">
-          <div className="text-gray-600 mb-4 md:mb-0">
-            © {currentYear} YouTube Summarizer. All rights reserved.
-          </div>
-
-          <div className="flex space-x-6">
-            <a href="#" className="text-gray-400 hover:text-gray-500">
-              <span className="sr-only">Twitter</span>
-              <Twitter className="h-6 w-6" />
-            </a>
-            <a href="#" className="text-gray-400 hover:text-gray-500">
-              <span className="sr-only">LinkedIn</span>
-              <Linkedin className="h-6 w-6" />
-            </a>
-            <a href="#" className="text-gray-400 hover:text-gray-500">
-              <span className="sr-only">GitHub</span>
-              <Github className="h-6 w-6" />
-            </a>
-          </div>
+        
+        <div className="border-t mt-8 pt-8 text-center text-gray-500 text-sm">
+          <p>© {currentYear} YT Summarizer. All rights reserved.</p>
         </div>
       </div>
     </footer>
