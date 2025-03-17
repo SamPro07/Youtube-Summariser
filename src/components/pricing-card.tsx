@@ -1,83 +1,101 @@
 "use client";
 
-import { User } from "@supabase/supabase-js";
-import { Button } from "./ui/button";
-import {
-    Card,
-    CardDescription,
-    CardFooter,
-    CardHeader,
-    CardTitle
-} from "./ui/card";
-import { supabase } from "../../supabase/supabase";
+import { Check } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 
-export default function PricingCard({ item, user }: {
-    item: any,
-    user: User | null
-}) {
-    // Handle checkout process
-    const handleCheckout = async (priceId: string) => {
-        if (!user) {
-            // Redirect to login if user is not authenticated
-            window.location.href = "/login?redirect=pricing";
-            return;
-        }
+interface PricingCardProps {
+  plan: {
+    name: string;
+    price: string;
+    description: string;
+    features: string[];
+    cta: string;
+    popular: boolean;
+    priceId: string;
+  };
+  isAuthenticated: boolean;
+}
 
+export default function PricingCard({ plan, isAuthenticated }: PricingCardProps) {
+  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
 
-        try {
-            const { data, error } = await supabase.functions.invoke('supabase-functions-create-checkout', {
-                body: {
-                    price_id: priceId,
-                    user_id: user.id,
-                    return_url: `${window.location.origin}/dashboard`,
-                },
-                headers: {
-                    'X-Customer-Email': user.email || '',
-                }
-            });
+  const handleClick = async () => {
+    if (!isAuthenticated) {
+      router.push('/sign-up?redirect=/pricing');
+      return;
+    }
 
-            if (error) {
-                throw error;
-            }
+    setIsLoading(true);
+    
+    try {
+      const response = await fetch(`/api/checkout?priceId=${plan.priceId}`);
+      const data = await response.json();
+      
+      if (!response.ok) throw new Error(data.error || 'Failed to create checkout session');
+      
+      // Redirect to Stripe
+      window.location.href = data.url;
+    } catch (error) {
+      console.error('Checkout error:', error);
+      alert('There was a problem starting the checkout process. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-            // Redirect to Stripe checkout
-            if (data?.url) {
-                window.location.href = data.url;
-            } else {
-                throw new Error('No checkout URL returned');
-            }
-        } catch (error) {
-            console.error('Error creating checkout session:', error);
-        }
-    };
-
-    return (
-        <Card className={`w-[350px] relative overflow-hidden ${item.popular ? 'border-2 border-blue-500 shadow-xl scale-105' : 'border border-gray-200'}`}>
-            {item.popular && (
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-white to-purple-50 opacity-30" />
-            )}
-            <CardHeader className="relative">
-                {item.popular && (
-                    <div className="px-4 py-1.5 text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-purple-600 rounded-full w-fit mb-4">
-                        Most Popular
-                    </div>
-                )}
-                <CardTitle className="text-2xl font-bold tracking-tight text-gray-900">{item.name}</CardTitle>
-                <CardDescription className="flex items-baseline gap-2 mt-2">
-                    <span className="text-4xl font-bold text-gray-900">${item?.amount / 100}</span>
-                    <span className="text-gray-600">/{item?.interval}</span>
-                </CardDescription>
-            </CardHeader>
-            <CardFooter className="relative">
-                <Button
-                    onClick={async () => {
-                        await handleCheckout(item.id)
-                    }}
-                    className={`w-full py-6 text-lg font-medium`}
-                >
-                    Get Started
-                </Button>
-            </CardFooter>
-        </Card>
-    )
+  return (
+    <div
+      className={`bg-white rounded-xl shadow-lg overflow-hidden border transition-transform hover:scale-105 flex flex-col ${
+        plan.popular
+          ? "border-blue-500 relative md:scale-105 md:hover:scale-110"
+          : "border-gray-200"
+      }`}
+    >
+      {plan.popular && (
+        <div className="bg-blue-500 text-white text-xs font-semibold px-3 py-1 absolute right-0 top-0 rounded-bl-lg">
+          MOST POPULAR
+        </div>
+      )}
+      
+      <div className="p-6 border-b bg-gray-50">
+        <h3 className="text-xl font-bold">{plan.name} Plan</h3>
+        <div className="mt-4">
+          <span className="text-3xl font-bold">{plan.price}</span>
+          <span className="text-gray-600">/month</span>
+        </div>
+      </div>
+      
+      <div className="p-6 flex-grow flex flex-col">
+        <p className="text-gray-600 mb-6">{plan.description}</p>
+        
+        <ul className="space-y-3 mb-8">
+          {plan.features.map((feature, i) => (
+            <li key={i} className="flex items-start gap-2">
+              <div className="flex-shrink-0 text-green-500 mt-1">
+                <Check size={18} />
+              </div>
+              <span className="text-gray-700">{feature}</span>
+            </li>
+          ))}
+        </ul>
+        
+        <div className="mt-auto">
+          <Button
+            onClick={handleClick}
+            disabled={isLoading}
+            className={`w-full py-6 ${
+              plan.popular
+                ? "bg-blue-600 hover:bg-blue-700"
+                : "bg-gray-800 hover:bg-gray-900"
+            }`}
+          >
+            {isLoading ? "Loading..." : plan.cta}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
 }
