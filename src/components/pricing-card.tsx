@@ -1,9 +1,10 @@
 "use client";
 
-import { Check } from "lucide-react";
+import { Check, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Badge } from "@/components/ui/badge";
 
 interface PricingCardProps {
   plan: {
@@ -16,11 +17,17 @@ interface PricingCardProps {
     priceId: string;
   };
   isAuthenticated: boolean;
+  subscription?: any; // Add subscription data prop
 }
 
-export default function PricingCard({ plan, isAuthenticated }: PricingCardProps) {
+export default function PricingCard({ plan, isAuthenticated, subscription }: PricingCardProps) {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+
+  // Check if this is the user's current plan
+  const isCurrentPlan = subscription && 
+    subscription.status === "active" && 
+    subscription.price_id === plan.priceId;
 
   const handleClick = async () => {
     if (!isAuthenticated) {
@@ -61,7 +68,7 @@ export default function PricingCard({ plan, isAuthenticated }: PricingCardProps)
       )}
       
       <div className="p-6 border-b bg-gray-50">
-        <h3 className="text-xl font-bold">{plan.name} Plan</h3>
+        <h3 className="text-xl font-bold">{plan.name}</h3>
         <div className="mt-4">
           <span className="text-3xl font-bold">{plan.price}</span>
           <span className="text-gray-600">/month</span>
@@ -83,17 +90,31 @@ export default function PricingCard({ plan, isAuthenticated }: PricingCardProps)
         </ul>
         
         <div className="mt-auto">
-          <Button
-            onClick={handleClick}
-            disabled={isLoading}
-            className={`w-full py-6 ${
-              plan.popular
-                ? "bg-blue-600 hover:bg-blue-700"
-                : "bg-gray-800 hover:bg-gray-900"
-            }`}
-          >
-            {isLoading ? "Loading..." : plan.cta}
-          </Button>
+          {isCurrentPlan ? (
+            <div className="space-y-2">
+              <Button
+                disabled
+                className="w-full py-6 opacity-70 cursor-not-allowed bg-gray-300 text-gray-700 hover:bg-gray-300"
+              >
+                Current Plan
+              </Button>
+              <Badge className="w-full justify-center flex items-center gap-1 bg-green-100 text-green-800 hover:bg-green-100">
+                <CheckCircle2 className="h-3 w-3" /> Active
+              </Badge>
+            </div>
+          ) : (
+            <Button
+              onClick={handleClick}
+              disabled={isLoading}
+              className={`w-full py-6 ${
+                plan.popular
+                  ? "bg-blue-600 hover:bg-blue-700"
+                  : "bg-gray-800 hover:bg-gray-900"
+              }`}
+            >
+              {isLoading ? "Loading..." : plan.cta}
+            </Button>
+          )}
         </div>
       </div>
     </div>
