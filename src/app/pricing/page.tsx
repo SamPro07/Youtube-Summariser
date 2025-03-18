@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import Navbar from "@/components/navbar";
 import Footer from "@/components/footer";
 import { Check as LucideCheck, ChevronUp, ChevronDown } from "lucide-react";
+import PricingCard from "@/components/pricing-card";
 
 // Define plan tiers for comparison
 const PLAN_TIERS: Record<string, number> = {
@@ -70,9 +71,8 @@ export default async function PricingPage() {
   // Pricing plans
   const plans = [
     {
-      name: "Basic Plan",
+      name: "Basic",
       price: "£1.00",
-      period: "per month",
       description: "Get fast, AI-generated summaries for short YouTube videos up to 15 minutes long. Ideal for quick insights into educational clips, news, and tutorials.",
       features: [
         "Summarize YouTube videos up to 15 minutes",
@@ -80,8 +80,9 @@ export default async function PricingPage() {
         "Bullet-point summaries",
         "Ideal for short educational clips, news, or tutorials"
       ],
-      priceId: "price_1R1qvqEA8X51ZZ0PgR6R9vDc", // Your Stripe price ID
-      popular: false
+      priceId: "price_1R1qvqEA8X51ZZ0PgR6R9vDc",
+      popular: false,
+      cta: "Subscribe Now"
     },
     {
       name: "Standard Plan",
@@ -177,49 +178,12 @@ export default async function PricingPage() {
           
           <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
             {plans.map((plan, index) => (
-              <div 
-                key={index} 
-                className={`bg-white rounded-2xl shadow-lg overflow-hidden border transition-transform hover:scale-[1.02] flex flex-col ${
-                  plan.popular ? 'border-blue-500 ring-1 ring-blue-500 transform scale-[1.02]' : 'border-gray-100'
-                }`}
-              >
-                {plan.popular && (
-                  <div className="bg-blue-500 text-white text-center py-2 font-medium">
-                    MOST POPULAR
-                  </div>
-                )}
-                <div className="p-8 flex flex-col flex-grow">
-                  <h2 className="text-2xl font-bold mb-4">{plan.name}</h2>
-                  <div className="mb-6">
-                    <span className="text-4xl font-bold">{plan.price}</span>
-                    <span className="text-gray-500 ml-2">{plan.period}</span>
-                  </div>
-                  <p className="text-gray-600 mb-8">
-                    {plan.description}
-                  </p>
-                  <div className="space-y-4 flex-grow">
-                    {plan.features.map((feature, i) => (
-                      <div key={i} className="flex items-start gap-3">
-                        <Check className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
-                        <span className="text-gray-700">{feature}</span>
-                      </div>
-                    ))}
-                  </div>
-                  
-                  <div className="mt-8">
-                    <Button 
-                      className={`w-full py-6 ${
-                        plan.popular ? 'bg-blue-600 hover:bg-blue-700' : ''
-                      }`}
-                      asChild
-                    >
-                      <Link href={user ? `/api/create-checkout?priceId=${plan.priceId}` : '/sign-up'}>
-                        {user ? 'Subscribe Now' : 'Sign Up & Subscribe'}
-                      </Link>
-                    </Button>
-                  </div>
-                </div>
-              </div>
+              <PricingCard 
+                key={index}
+                plan={plan} 
+                isAuthenticated={!!user} 
+                subscription={subscription} 
+              />
             ))}
           </div>
         </div>
