@@ -21,6 +21,30 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Price ID is required' }, { status: 400 });
     }
     
+    // If upgrading from an existing subscription, cancel the old one immediately
+    if (upgradeFromSubscriptionId) {
+      console.log(`Canceling previous subscription immediately: ${upgradeFromSubscriptionId}`);
+      
+      try {
+        // Cancel immediately instead of at period end
+        await stripe.subscriptions.cancel(upgradeFromSubscriptionId);
+        
+        // Update the subscription in the database
+        await supabase
+          .from('subscriptions')
+          .update({
+            status: 'canceled',
+            canceled_at: Math.floor(Date.now() / 1000)
+          })
+          .eq('stripe_id', upgradeFromSubscriptionId);
+          
+        console.log('Previous subscription canceled immediately');
+      } catch (error: any) {
+        console.error('Error canceling previous subscription:', error.message);
+        // Continue with new subscription creation even if cancellation fails
+      }
+    }
+    
     // Fixed checkout session parameters
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
@@ -32,8 +56,8 @@ export async function POST(request: Request) {
           quantity: 1,
         },
       ],
-      cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/settings`,
-      success_url: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/settings?upgraded=true`,
+      cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/pricing`,
+      success_url: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/settings?subscriptionUpdated=true`,
       metadata: {
         userId: user.id,
         upgradeFrom: upgradeFromSubscriptionId || 'new_subscription',

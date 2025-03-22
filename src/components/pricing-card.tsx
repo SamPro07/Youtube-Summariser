@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, CheckCircle2 } from "lucide-react";
+import { Check, CheckCircle2, ChevronUp, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -17,7 +17,7 @@ interface PricingCardProps {
     priceId: string;
   };
   isAuthenticated: boolean;
-  subscription?: any; // Add subscription data prop
+  subscription?: any;
 }
 
 export default function PricingCard({ plan, isAuthenticated, subscription }: PricingCardProps) {
@@ -29,6 +29,21 @@ export default function PricingCard({ plan, isAuthenticated, subscription }: Pri
     subscription.status === "active" && 
     subscription.price_id === plan.priceId;
 
+  // Determine if this plan is an upgrade or downgrade based on price
+  const getPlanAction = () => {
+    if (!subscription || !subscription.amount) return null;
+    
+    // Extract numeric value from plan price (remove currency symbol and convert to number)
+    const planPrice = parseFloat(plan.price.replace(/[^0-9.]/g, ''));
+    const currentPrice = subscription.amount / 100; // Assuming amount is in cents
+    
+    if (planPrice > currentPrice) return "upgrade";
+    if (planPrice < currentPrice) return "downgrade";
+    return null;
+  };
+  
+  const planAction = getPlanAction();
+
   const handleClick = async () => {
     if (!isAuthenticated) {
       router.push('/sign-up?redirect=/pricing');
@@ -38,19 +53,107 @@ export default function PricingCard({ plan, isAuthenticated, subscription }: Pri
     setIsLoading(true);
     
     try {
-      const response = await fetch(`/api/checkout?priceId=${plan.priceId}`);
+      // For new subscriptions
+      if (!subscription) {
+        const response = await fetch(`/api/checkout?priceId=${plan.priceId}`);
+        const data = await response.json();
+        
+        if (!response.ok) throw new Error(data.error || 'Failed to create checkout session');
+        
+        window.location.href = data.url;
+        return;
+      }
+      
+      // For plan changes - use create-checkout-session API with proper metadata
+      // This ensures the old subscription is properly handled
+      const response = await fetch('/api/create-checkout-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          priceId: plan.priceId,
+          customerId: subscription.customer,
+          upgradeFromSubscriptionId: subscription.stripe_id // This helps identify which subscription to cancel
+        })
+      });
+      
       const data = await response.json();
       
       if (!response.ok) throw new Error(data.error || 'Failed to create checkout session');
       
-      // Redirect to Stripe
       window.location.href = data.url;
     } catch (error) {
       console.error('Checkout error:', error);
-      alert('There was a problem starting the checkout process. Please try again.');
+      alert('There was a problem processing your request. Please try again.');
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Render appropriate button based on subscription status
+  const renderButton = () => {
+    if (isCurrentPlan) {
+      return (
+        <div className="space-y-2">
+          <Button
+            disabled
+            className="w-full py-6 opacity-70 cursor-not-allowed bg-gray-300 text-gray-700 hover:bg-gray-300"
+          >
+            Current Plan
+          </Button>
+          <Badge className="w-full justify-center flex items-center gap-1 bg-green-100 text-green-800 hover:bg-green-100">
+            <CheckCircle2 className="h-3 w-3" /> Active
+          </Badge>
+        </div>
+      );
+    }
+    
+    if (subscription && planAction) {
+      // Show upgrade/downgrade button
+      return (
+        <Button
+          onClick={handleClick}
+          disabled={isLoading}
+          className={`w-full py-6 flex items-center justify-center gap-2 ${
+            planAction === "upgrade"
+              ? "bg-blue-600 hover:bg-blue-700"
+              : "bg-gray-600 hover:bg-gray-700"
+          }`}
+        >
+          {isLoading ? (
+            "Processing..."
+          ) : (
+            <>
+              {planAction === "upgrade" ? (
+                <>
+                  <ChevronUp className="h-4 w-4" />
+                  Upgrade Plan
+                </>
+              ) : (
+                <>
+                  <ChevronDown className="h-4 w-4" />
+                  Downgrade Plan
+                </>
+              )}
+            </>
+          )}
+        </Button>
+      );
+    }
+    
+    // Default button for non-subscribers
+    return (
+      <Button
+        onClick={handleClick}
+        disabled={isLoading}
+        className={`w-full py-6 ${
+          plan.popular
+            ? "bg-blue-600 hover:bg-blue-700"
+            : "bg-gray-800 hover:bg-gray-900"
+        }`}
+      >
+        {isLoading ? "Loading..." : plan.cta}
+      </Button>
+    );
   };
 
   return (
@@ -90,31 +193,7 @@ export default function PricingCard({ plan, isAuthenticated, subscription }: Pri
         </ul>
         
         <div className="mt-auto">
-          {isCurrentPlan ? (
-            <div className="space-y-2">
-              <Button
-                disabled
-                className="w-full py-6 opacity-70 cursor-not-allowed bg-gray-300 text-gray-700 hover:bg-gray-300"
-              >
-                Current Plan
-              </Button>
-              <Badge className="w-full justify-center flex items-center gap-1 bg-green-100 text-green-800 hover:bg-green-100">
-                <CheckCircle2 className="h-3 w-3" /> Active
-              </Badge>
-            </div>
-          ) : (
-            <Button
-              onClick={handleClick}
-              disabled={isLoading}
-              className={`w-full py-6 ${
-                plan.popular
-                  ? "bg-blue-600 hover:bg-blue-700"
-                  : "bg-gray-800 hover:bg-gray-900"
-              }`}
-            >
-              {isLoading ? "Loading..." : plan.cta}
-            </Button>
-          )}
+          {renderButton()}
         </div>
       </div>
     </div>

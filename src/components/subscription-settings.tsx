@@ -36,9 +36,37 @@ export default function SubscriptionSettings({ user, subscription }: Subscriptio
   const hasActiveSubscription = !!subscription && subscription.status === "active";
   const isCanceled = !!subscription && subscription.status === "canceled";
   
-  // Use direct subscription data without relying on joined tables
+  // Function to get plan name based on price ID
+  const getPlanDisplayName = (priceId: string | undefined) => {
+    if (!priceId) return "Premium";
+    
+    console.log("Looking up plan name for price ID:", priceId);
+    
+    // Map price IDs to plan names with type annotation
+    const planMapping: Record<string, string> = {
+      "price_1R1qvqEA8X51ZZ0PgR6R9vDc": "Basic",
+      "price_1R1qoBEA8X51ZZ0PYvGOQKMi": "Standard",
+      "price_1R1qwZEA8X51ZZ0P0rgXMakQ": "Pro",
+    };
+    
+    // If not found in mapping, extract name from price ID
+    if (!planMapping[priceId]) {
+      // Extract plan name from price ID if possible
+      const priceLower = priceId.toLowerCase();
+      if (priceLower.includes('basic')) return "Basic";
+      if (priceLower.includes('standard')) return "Standard";
+      if (priceLower.includes('pro')) return "Pro";
+    }
+    
+    const planName = planMapping[priceId] || priceId;
+    console.log("Resolved plan name:", planName);
+    
+    return planName;
+  };
+  
+  // Use dynamic plan name instead of hardcoded "Premium Plan"
   const planName = subscription 
-    ? `Premium Plan (£${(subscription.amount / 100).toFixed(2)} / ${subscription.interval})`
+    ? `${getPlanDisplayName(subscription.price_id)} Plan (£${(subscription.amount / 100).toFixed(2)} / ${subscription.interval})`
     : "No subscription";
     
   const planPrice = subscription 
@@ -157,10 +185,8 @@ export default function SubscriptionSettings({ user, subscription }: Subscriptio
         toast.warning("Subscription canceled in Stripe, but database update failed.");
       } else {
         toast.success("Subscription canceled successfully");
+        router.refresh();
       }
-      
-      // Refresh the page to show updated subscription status
-      window.location.reload();
     } catch (error: any) {
       console.error("Error canceling subscription:", error);
       toast.error("Error canceling subscription: " + (error.message || "Unknown error"));

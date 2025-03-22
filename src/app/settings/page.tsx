@@ -8,8 +8,14 @@ import { Button } from "@/components/ui/button";
 import ProfileSettings from "@/components/profile-settings";    
 import SubscriptionSettings from "@/components/subscription-settings";
 import { AlertCircle } from "lucide-react";
+import { revalidatePath } from 'next/cache';
 
-export default async function SettingsPage() {
+export default async function SettingsPage({ searchParams }: { searchParams: any }) {
+  // Force revalidation if redirected from pricing with updated subscription
+  if (searchParams?.subscriptionUpdated) {
+    revalidatePath('/settings');
+  }
+
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   

@@ -8,6 +8,8 @@ import Navbar from "@/components/navbar";
 import Footer from "@/components/footer";
 import { Check as LucideCheck, ChevronUp, ChevronDown } from "lucide-react";
 import PricingCard from "@/components/pricing-card";
+import SubscriptionUpdatedAlert from "@/components/subscription-updated-alert";
+import { revalidatePath } from 'next/cache';
 
 // Define plan tiers for comparison
 const PLAN_TIERS: Record<string, number> = {
@@ -28,43 +30,43 @@ interface Plan {
   popular: boolean;
   description: string;
   period: string;
+  cta: string;
 }
 
-export default async function PricingPage() {
+// Define interface for page props
+interface PricingPageProps {
+  searchParams: { subscriptionUpdated?: string }
+}
+
+export default async function PricingPage({ searchParams }: PricingPageProps) {
+  // Force revalidation if subscription was updated
+  if (searchParams.subscriptionUpdated) {
+    revalidatePath('/pricing');
+  }
+
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   
   // Get subscription data if user is logged in
   let subscription = null;
-  let currentPlanTier = 0; // Default to free tier
   
   if (user) {
-    const { data: subscriptionData } = await supabase
+    console.log("Checking subscription for user ID:", user.id);
+    
+    // Order by created_at desc to get the most recent subscription
+    const { data: subscriptions, error } = await supabase
       .from('subscriptions')
       .select('*')
       .eq('user_id', user.id)
       .eq('status', 'active')
-      .single();
+      .order('created_at', { ascending: false });
       
-    subscription = subscriptionData;
-    console.log("Found subscription data:", subscriptionData);
-    
-    // Determine current plan tier based on subscription
-    if (subscription) {
-      // Extract price ID from subscription and match it directly to plans
-      const priceId = subscription.price_id;
-      
-      if (priceId === "price_1OOC9JH4bzAqxCRRxYZhIkBq") {
-        currentPlanTier = 1; // Basic
-      } else if (priceId === "price_1OOC9KH4bzAqxCRRh7Mjmkb0") {
-        currentPlanTier = 2; // Pro
-      } else if (priceId === "price_1OOC9NH4bzAqxCRRqkGGmIvF") {
-        currentPlanTier = 3; // Enterprise
-      } else {
-        currentPlanTier = 0; // Free
-      }
-      
-      console.log("Current plan tier:", currentPlanTier);
+    if (error) {
+      console.error("Subscription query error:", error);
+    } else if (subscriptions && subscriptions.length > 0) {
+      // Get the most recent subscription
+      subscription = subscriptions[0];
+      console.log("Using subscription data:", subscription);
     }
   }
   
@@ -96,8 +98,9 @@ export default async function PricingPage() {
         "Ideal for podcasts, interviews, and longer tutorials",
         "Priority processing for faster results"
       ],
-      priceId: "price_1R1qoBEA8X51ZZ0PYvGOQKMi", // Your Stripe price ID
-      popular: true
+      priceId: "price_1R1qoBEA8X51ZZ0PYvGOQKMi",
+      popular: true,
+      cta: "Subscribe Now"
     },
     {
       name: "Pro Plan",
@@ -112,8 +115,9 @@ export default async function PricingPage() {
         "Highest priority processing for the fastest results",
         "Early access to new AI features"
       ],
-      priceId: "price_1R1qwZEA8X51ZZ0P0rgXMakQ", // Your Stripe price ID
-      popular: false
+      priceId: "price_1R1qwZEA8X51ZZ0P0rgXMakQ",
+      popular: false,
+      cta: "Subscribe Now"
     }
   ];
   
@@ -166,6 +170,11 @@ export default async function PricingPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-gray-50">
       <Navbar />
+      
+      {/* Show alert if subscription was updated */}
+      {searchParams.subscriptionUpdated && (
+        <SubscriptionUpdatedAlert />
+      )}
       
       <div className="pt-24 pb-16">
         <div className="container mx-auto px-4">
